@@ -219,6 +219,7 @@ CREATE TABLE files (
 - `GET /login` - Authentication form with error handling
 - `POST /login` - Process login with JWT token creation
 - `POST /token` - API token endpoint for programmatic access
+- `GET /logout` - Logout endpoint that clears authentication cookies
 
 ### File Management Endpoints
 - `GET /dashboard` - Main chat interface with file timeline
