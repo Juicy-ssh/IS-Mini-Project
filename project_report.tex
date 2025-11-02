@@ -11,10 +11,8 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
 \usepackage{graphicx}
-\usepackage{listings}
-\usepackage{color}
-\usepackage{longtable}
 \usepackage{caption}
+\usepackage{longtable}
 \usepackage{booktabs}
 \usepackage{fancyhdr}
 \usepackage{indentfirst}
@@ -22,19 +20,8 @@
 \usepackage{amssymb}
 \usepackage{enumitem}
 \usepackage{titlesec}
-\usepackage{tikz}
 \titleformat{\section}{\large\bfseries}{\thesection.}{0.5em}{}
 \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection.}{0.5em}{}
-
-% Code listing style
-\definecolor{codegray}{rgb}{0.95,0.95,0.95}
-\lstset{
-  backgroundcolor=\color{codegray},
-  basicstyle=\ttfamily\small,
-  breaklines=true,
-  frame=single,
-  columns=fullflexible
-}
 
 % Header / Footer
 \pagestyle{fancy}
@@ -52,750 +39,654 @@
 \thispagestyle{empty}
 \vspace{1cm}
 \begin{abstract}
-This report documents the Secure File Chat Application, a FastAPI-based web application that provides a chat-like interface for securely sharing files between users. The document covers the motivation, system architecture, data model, API endpoints, security design, implementation details, deployment options, testing strategy, and future enhancements. The goal is to provide a comprehensive understanding of the project and to serve as supporting documentation for evaluation and extension.
+This comprehensive report presents a theoretical analysis and design methodology for the Secure File Chat Application, a web-based platform that integrates secure file sharing with intuitive chat-like interfaces. The document explores fundamental concepts in computer security, database theory, user experience design, and software architecture. Through detailed examination of authentication mechanisms, access control models, cryptographic principles, and human-computer interaction theories, this report establishes a theoretical framework for developing secure collaborative systems. The analysis demonstrates how theoretical computer science principles can be applied to create practical solutions that balance security requirements with user accessibility, providing insights into the design and implementation of modern secure web applications.
 \end{abstract}
 \newpage
 \tableofcontents
 \newpage
 
 \section{Introduction}
-\subsection{Overview}
-The Secure File Chat Application is a server-side rendered web application built with FastAPI, SQLAlchemy, and Jinja2 templates. It blends the familiarity of a chat interface with secure file sharing mechanics. Users register using an email address and receive a generated username and key; they then authenticate and can upload files, optionally sharing them with other users. Files are stored on disk with unpredictable filenames and recorded in a relational database.
+\subsection{Overview of Secure File Sharing Systems}
+The evolution of digital communication has fundamentally transformed how individuals and organizations exchange information. Secure file sharing systems represent a critical component of modern collaborative environments, where the need to protect sensitive data intersects with the demand for seamless information exchange. The Secure File Chat Application embodies this convergence, implementing theoretical principles of secure communication within an intuitive messaging paradigm.
 
-\subsection{Motivation}
-The project demonstrates secure file-sharing design patterns including careful user authentication, secure password handling, token-based session management, unique filename generation to protect file storage, and a user-friendly interface that organizes file exchanges as chat bubbles with timestamps. The application is ideal for small teams, labs, or coursework where a simple yet secure file-sharing workflow is desired.
+At its core, the application addresses the theoretical challenge of maintaining data confidentiality while facilitating natural user interactions. This requires understanding the fundamental principles of cryptography, authentication theory, and human-computer interaction. The system transforms traditional file transfer operations into conversational exchanges, where files become messages in a secure dialogue between authorized participants.
 
-\subsection{Scope of this Report}
-This report explains the system end-to-end, documents key design and implementation decisions, and provides explicit details of APIs, database schema, security considerations, and deployment recommendations. The report is structured to be self-contained: readers should be able to understand the project and extend or deploy it using the material and code excerpts presented here.
+\subsection{Historical Context and Evolution}
+The theoretical foundations of secure file sharing can be traced through the evolution of computer security paradigms. Early file sharing systems relied on basic access control mechanisms, often implemented through simple password protection or network-level restrictions. However, these approaches proved insufficient as collaborative needs expanded and security threats became more sophisticated.
 
-\section{Problem Statement}
-In today's digital landscape, secure file sharing is crucial for organizations and individuals alike. Traditional file-sharing methods often lack proper security controls, user-friendly interfaces, or both. Common issues include:
-\begin{itemize}
-  \item Insecure password storage and authentication mechanisms
-  \item Predictable file storage that allows unauthorized access
-  \item Lack of proper access controls for shared files
-  \item Poor user experience with complex interfaces
-  \item Insufficient protection against common web vulnerabilities
-\end{itemize}
-The Secure File Chat Application addresses these challenges by providing a secure, intuitive platform that combines chat-like file sharing with robust security measures, ensuring that users can share files confidently while maintaining data integrity and privacy.
+The emergence of public key cryptography in the 1970s, particularly through the work of Diffie and Hellman, laid the groundwork for modern secure communication systems. Subsequent developments in authentication protocols, including Kerberos and public key infrastructure (PKI), further refined the theoretical approaches to secure data exchange. The Secure File Chat Application builds upon these foundational theories, integrating established cryptographic principles with contemporary user interface design concepts.
 
-\section{Methodology}
-The project follows an agile development methodology with iterative design and implementation. Key phases include:
+\subsection{Theoretical Motivation and Research Objectives}
+The primary theoretical motivation for this project stems from the need to reconcile competing requirements in secure system design: security versus usability. Traditional security models often prioritize protection at the expense of user experience, creating systems that are theoretically sound but practically unusable. Conversely, user-friendly systems frequently compromise security principles for convenience.
+
+This report pursues several key research objectives:
 \begin{enumerate}
-  \item \textbf{Requirements Analysis}: Identifying functional and non-functional requirements through user stories and use cases.
-  \item \textbf{System Design}: Creating architectural diagrams, database schemas, and API specifications.
-  \item \textbf{Implementation}: Developing the application using FastAPI framework with modular components.
-  \item \textbf{Testing}: Conducting manual and automated testing to ensure functionality and security.
-  \item \textbf{Documentation}: Creating comprehensive documentation for deployment and maintenance.
-\end{enumerate}
-The development process emphasizes security-first design, with regular code reviews and security audits throughout the implementation phase.
-
-\section{Project Overview}
-The Secure File Chat Application is designed as a comprehensive solution for secure file sharing with the following key features:
-\begin{itemize}
-  \item User registration and authentication system
-  \item Secure file upload and storage mechanism
-  \item Chat-like interface for file interactions
-  \item Admin panel for system management
-  \item Responsive web interface with modern UI design
-\end{itemize}
-The application serves as both a functional tool and an educational resource for understanding secure web application development practices.
-
-\section{Requirements and Technology Stack}
-\subsection{Functional Requirements}
-\begin{itemize}
-  \item User registration with email input and auto-generated credentials.
-  \item User authentication and session management.
-  \item File upload and secure storage on disk with metadata stored in a database.
-  \item Ability to share files with specific recipients or via codes.
-  \item Chat-like dashboard showing sent and received file "bubbles" with timestamps and download links.
-  \item Admin dashboard for viewing and managing users and files.
-\end{itemize}
-
-\subsection{Non-functional Requirements}
-\begin{itemize}
-  \item Secure storage of credentials and files.
-  \item Defend against unauthorized access to files and endpoints.
-  \item Usable and responsive UI with graceful error messages.
-  \item Simple deployment with a small dependency footprint.
-\end{itemize}
-
-\subsection{Technology Stack}
-\begin{longtable}{@{}p{4cm}p{10cm}@{}}
-\toprule
-Component & Choice and rationale \\
-\midrule
-Backend framework & FastAPI -- modern, fast, async-capable, good dev experience and autogenerated docs. \\
-ORM & SQLAlchemy -- flexible ORM with good integration into FastAPI projects. \\
-Database & SQLite for development (file-based, zero-config); application supports switching to another RDBMS via DATABASE_URL. \\
-Migration tool & Alembic -- DB schema versioning in repository. \\
-Template engine & Jinja2 -- server-side rendering for pages and dashboards. \\
-Authentication & JWT (python-jose) stored in cookies for web UI and returned as JSON for API. \\
-Password hashing & SHA256 used in the repo (see security discussion). Recommended: use bcrypt or Argon2 in production. \\
-File storage & Local file system with secure saved filenames (UUIDs). \\
-Web server & Uvicorn as ASGI server. \\
-\bottomrule
-\end{longtable}
-
-\section{System Architecture}
-\subsection{High-level Architecture}
-The application follows a typical web MVC pattern with a FastAPI server managing requests, SQLAlchemy for persistence (models and crud operations), and Jinja2 for rendering views. Static assets (CSS) are served from a /static path. Authentication is enforced by dependency injection (FastAPI's Depends), and all protected endpoints require a valid JWT token.
-
-\subsection{Component Diagram}
-A simple component diagram is provided conceptually below (render or adapt with any diagram tool if needed):
-\begin{itemize}
-  \item User Browser: interacts with the web UI (templates) and JS for AJAX uploads.
-  \item FastAPI Server: handles routing, templating, authentication, file storage logic, and CRUD operations.
-  \item Database (SQLite): stores users and file metadata.
-  \item File Storage (Local disk): stores file blobs under a configured UPLOAD_DIR with UUID-based names.
-\end{itemize}
-
-% TikZ-based simplified diagram
-\begin{center}
-\begin{tikzpicture}[node distance=2.2cm, auto]
-  \node[draw,rounded corners] (browser) {User Browser};
-  \node[draw,rounded corners,right=of browser] (server) {FastAPI Server};
-  \node[draw,rounded corners,below=of server,xshift=-1.2cm] (db) {SQLite Database};
-  \node[draw,rounded corners,below=of server,xshift=1.2cm] (files) {File Storage (disk)};
-  \draw[->] (browser) -- node {HTTP/HTTPS} (server);
-  \draw[->] (server) -- node {SQLAlchemy queries} (db);
-  \draw[->] (server) -- node {Read/Write files} (files);
-\end{tikzpicture}
-\end{center}
-
-\section{Data Model}
-\subsection{Entity Definitions}
-The project uses two primary models: \texttt{User} and \texttt{File}. These are defined in `models.py` and mapped directly to relational database tables.
-
-\subsection{User}
-Fields (persistent):
-\begin{itemize}
-  \item id (Integer, PK)
-  \item username (String, unique, not null)
-  \item email (String, unique, not null)
-  \item hashed_password (String, not null)
-  \item is_active (Boolean)
-  \item is_admin (Boolean)
-\end{itemize}
-
-The user object also exposes relationships to files they own and received files (two relationships mapping to the `File` foreign keys).
-
-\subsection{File}
-Fields:
-\begin{itemize}
-  \item id (Integer, PK)
-  \item filename (String) -- original filename for display
-  \item saved_filename (String, unique) -- secure name on disk (UUID+extension)
-  \item owner_id (ForeignKey to users.id)
-  \item recipient_id (ForeignKey to users.id, nullable)
-  \item uploaded_at (DateTime)
-\end{itemize}
-
-\subsection{Schema SQL}
-A simplified schema excerpt (as in README):
-\begin{lstlisting}
-CREATE TABLE users (
-  id INTEGER PRIMARY KEY,
-  username VARCHAR UNIQUE NOT NULL,
-  email VARCHAR UNIQUE NOT NULL,
-  hashed_password VARCHAR NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE files (
-  id INTEGER PRIMARY KEY,
-  filename VARCHAR NOT NULL,
-  saved_filename VARCHAR NOT NULL,
-  owner_id INTEGER NOT NULL,
-  recipient_id INTEGER,
-  uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-\end{lstlisting}
-
-\section{API and Endpoints}
-This section catalogs the primary HTTP endpoints provided by the application and describes request/response shapes and behaviors.
-
-\subsection{Authentication / User Management}
-\begin{itemize}
-  \item POST /create-user/
-    \begin{itemize}
-      \item Description: Register a new user, automatically generates a username and key.
-      \item Request body: `UserCreate` (email)
-      \item Response: `UserRegisterResponse` (username, email, key)
-    \end{itemize}
-  \item POST /login (web form)
-    \begin{itemize}
-      \item Description: Form login; sets an `access_token` cookie on success and redirects to `/dashboard`.
-    \end{itemize}
-  \item POST /token (API)
-    \begin{itemize}
-      \item Description: OAuth2 password flow for API clients; returns a JSON token.
-      \item Response: `Token` object (access_token, token_type)
-    \end{itemize}
-  \item GET /users/me/
-    \begin{itemize}
-      \item Description: Protected endpoint returning the current user.
-    \end{itemize}
-\end{itemize}
-
-\subsection{File Operations}
-\begin{itemize}
-  \item POST /upload/ -- multipart/form-data with file and optional recipient_username. Protected route. Saves file to disk with a UUID-based name and creates a DB record.
-  \item GET /download/{saved_filename} -- downloads file if requester is owner or recipient; returns FileResponse with original filename.
-  \item GET /received-files/ -- returns a list of `FileInfo` entries for files addressed to current user.
-\end{itemize}
-
-\subsection{Web Pages (Templates)}
-The application renders the following pages via Jinja2 templates:
-\begin{itemize}
-  \item GET / (home page)
-  \item GET/POST /register (registration)
-  \item GET/POST /login (login)
-  \item GET /dashboard (chat-like dashboard)
-  \item GET /received (received files display)
-  \item GET /admin (admin dashboard)
-\end{itemize}
-
-\subsection{Admin Endpoints}
-Admin-specific endpoints are protected by `is_admin` check and include listing users/files and deletion endpoints.
-
-\section{Implementation Details}
-This section provides an in-depth analysis of the codebase, implementation patterns, and architectural decisions made during development.
-
-\subsection{Application Architecture Overview}
-The application follows a layered architecture with clear separation of concerns:
-\begin{itemize}
-  \item \textbf{Presentation Layer}: Jinja2 templates and static CSS/JS files
-  \item \textbf{Application Layer}: FastAPI routes and dependency injection
-  \item \textbf{Domain Layer}: Business logic in CRUD operations and security utilities
-  \item \textbf{Infrastructure Layer}: Database models, session management, and file storage
-\end{itemize}
-
-\subsection{Authentication System Deep Dive}
-\subsubsection{JWT Token Implementation}
-The authentication system uses JSON Web Tokens with the following characteristics:
-\begin{itemize}
-  \item \textbf{Algorithm}: HS256 (HMAC-SHA256) for symmetric encryption
-  \item \textbf{Payload Structure}: Contains username (sub claim) and expiration timestamp
-  \item \textbf{Token Storage}: HTTP-only cookies for web sessions, Authorization header for API calls
-  \item \textbf{Expiration}: Configurable via ACCESS\_TOKEN\_EXPIRE\_MINUTES environment variable
-\end{itemize}
-
-\subsubsection{Multi-Source Token Resolution}
-The `get_current_user` dependency implements a sophisticated token resolution strategy:
-\begin{enumerate}
-  \item First attempts to extract token from HTTP-only cookie named `access_token`
-  \item If cookie not found, checks Authorization header with Bearer prefix
-  \item Decodes JWT and validates signature using configured SECRET\_KEY
-  \item Extracts username from token payload and queries database
-  \item Returns user object or raises HTTP 401 for any validation failure
+  \item Analyze theoretical frameworks for secure file sharing systems
+  \item Examine authentication and authorization models in web applications
+  \item Investigate user interface design principles for security-critical systems
+  \item Explore database design theories for secure data management
+  \item Evaluate deployment and operational considerations for secure web platforms
 \end{enumerate}
 
-\subsubsection{Code Example: Authentication Dependency}
-\begin{lstlisting}[language=Python]
-def get_current_user(
-    request: Request,
-    db: Session = Depends(get_db)
-) -> models.User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    # Try cookie first (web requests)
-    token = request.cookies.get("access_token")
-    if token:
-        token = token.replace("Bearer ", "")
-
-    # Fallback to Authorization header (API requests)
-    if not token:
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.replace("Bearer ", "")
-
-    if not token:
-        raise credentials_exception
-
-    try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
-
-    user = crud.get_user_by_username(db, username=username)
-    if user is None:
-        raise credentials_exception
-    return user
-\end{lstlisting}
-
-\subsection{Password Security and Key Generation}
-\subsubsection{Current Implementation Analysis}
-The current implementation uses SHA256 hashing without salt, which has security limitations:
+\subsection{Scope and Limitations}
+This theoretical analysis encompasses the design principles, security architectures, and user experience considerations that inform the Secure File Chat Application. The scope includes:
 \begin{itemize}
-  \item \textbf{No Salt}: Makes the system vulnerable to rainbow table attacks
-  \item \textbf{Fast Hashing}: SHA256 is designed for speed, not password security
-  \item \textbf{No Work Factor}: Cannot be tuned for computational difficulty
+  \item Theoretical foundations of secure communication protocols
+  \item Authentication and access control theories
+  \item Database design and data integrity principles
+  \item User interface and experience design theories
+  \item System architecture and deployment methodologies
 \end{itemize}
 
-\subsubsection{Key Generation Algorithm}
-User credentials are generated using cryptographically secure methods:
-\begin{lstlisting}[language=Python]
-def generate_unique_code(length: int = 10) -> str:
-    """Generates a secure, 10-character code."""
-    alphabet = string.ascii_uppercase + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
-\end{lstlisting}
+The analysis deliberately excludes implementation-specific details, focusing instead on the theoretical frameworks that guide system design and development decisions.
 
-\subsubsection{Recommended Security Upgrade}
-The codebase includes Passlib with bcrypt configuration but doesn't use it:
-\begin{lstlisting}[language=Python]
-# Recommended implementation
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+\section{Problem Statement and Theoretical Framework}
+\subsection{Fundamental Challenges in Secure File Sharing}
+Secure file sharing systems operate within a complex theoretical landscape where multiple competing objectives must be balanced. The core challenge lies in the inherent tension between accessibility and protection: how to make digital resources available to authorized users while preventing unauthorized access.
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-\end{lstlisting}
-
-\subsection{File Storage Architecture}
-\subsubsection{Secure Filename Generation}
-Files are stored with UUID-based names to prevent enumeration attacks:
-\begin{lstlisting}[language=Python]
-# Generate secure filename
-file_extension = os.path.splitext(file.filename)[1]
-saved_filename = f"{uuid.uuid4()}{file_extension}"
-file_path = os.path.join(settings.UPLOAD_DIR, saved_filename)
-\end{lstlisting}
-
-\subsubsection{Storage Strategy}
+From a theoretical perspective, this challenge can be framed as an optimization problem where security constraints must be satisfied while minimizing user friction. The problem space encompasses several key dimensions:
 \begin{itemize}
-  \item \textbf{Directory Structure}: All files stored in configurable UPLOAD\_DIR
-  \item \textbf{Naming Convention}: UUID v4 + original file extension
-  \item \textbf{Metadata Storage}: Original filename preserved in database for downloads
-  \item \textbf{Access Control}: Files accessible only through authenticated download endpoints
+  \item \textbf{Authentication Complexity}: Establishing user identity with sufficient certainty
+  \item \textbf{Authorization Granularity}: Defining appropriate access levels for different user roles
+  \item \textbf{Data Integrity}: Ensuring files remain unmodified during transmission and storage
+  \item \textbf{Confidentiality Preservation}: Protecting sensitive information from disclosure
+  \item \textbf{Usability Requirements}: Maintaining intuitive interaction patterns
 \end{itemize}
 
-\subsubsection{File Upload Process}
-The upload endpoint implements a comprehensive workflow:
-\begin{enumerate}
-  \item Authenticate user via JWT token
-  \item Validate file presence and optional recipient
-  \item Generate secure filename using UUID
-  \item Stream file to disk with error handling
-  \item Create database record with metadata
-  \item Return success response or redirect to dashboard
-\end{enumerate}
+\subsection{Security Threat Models}
+The theoretical analysis of security threats provides a framework for understanding potential attack vectors and defense strategies. Drawing from established threat modeling methodologies, the application addresses several categories of security risks:
 
-\subsection{Database Design and Relationships}
-\subsubsection{SQLAlchemy Model Definitions}
-The data models use SQLAlchemy 2.0 declarative syntax with proper relationships:
+\subsubsection{Authentication Threats}
+Authentication mechanisms are vulnerable to various attack patterns that exploit human behavior and system weaknesses. Password-based authentication, while theoretically sound, remains susceptible to social engineering attacks, dictionary attacks, and credential stuffing. Token-based authentication systems introduce additional theoretical considerations regarding token generation, distribution, and validation.
 
-\begin{lstlisting}[language=Python]
-class User(Base):
-    __tablename__ = "users"
+Social engineering attacks exploit human psychology rather than technical vulnerabilities, manipulating users into revealing authentication credentials through deception or coercion. Dictionary attacks systematically test common passwords and phrases, capitalizing on users' tendency to choose predictable authentication secrets. Credential stuffing leverages previously compromised username-password pairs from other systems, exploiting password reuse across multiple services.
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_admin = Column(Boolean, default=False)
+Token-based systems, while providing stateless authentication, introduce complex theoretical challenges in token lifecycle management. Token generation must ensure cryptographic randomness to prevent prediction attacks, while distribution mechanisms must protect against interception during transmission. Validation processes require efficient verification algorithms that balance security with performance constraints.
 
-    # Relationships
-    files = relationship("File", back_populates="owner",
-                        foreign_keys="File.owner_id")
-    received_files = relationship("File", back_populates="recipient",
-                                 foreign_keys="File.recipient_id")
+\subsubsection{Authorization Vulnerabilities}
+Authorization flaws represent a significant theoretical challenge in access control systems. The complexity of permission models can lead to over-privileged accounts or insufficient access controls. Role-based access control (RBAC) theories provide frameworks for managing these complexities, but implementation requires careful consideration of role hierarchies and permission inheritance.
 
-class File(Base):
-    __tablename__ = "files"
+The principle of least privilege suggests that users should only receive the minimum permissions necessary to perform their required functions. However, practical implementation often results in role explosion, where numerous fine-grained roles become difficult to manage and audit. Permission inheritance in hierarchical role structures can create unexpected privilege escalation paths if not carefully designed and validated.
 
-    id = Column(Integer, primary_key=True, index=True)
-    filename = Column(String, index=True)  # Original name
-    saved_filename = Column(String, unique=True)  # Secure name
-    owner_id = Column(Integer, ForeignKey("users.id"))
-    recipient_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    uploaded_at = Column(DateTime, default=datetime.datetime.utcnow)
+\subsubsection{Data Transmission Risks}
+Files in transit face multiple theoretical threats, including man-in-the-middle attacks, eavesdropping, and data modification. Cryptographic protocols such as TLS/SSL provide theoretical foundations for secure transmission, but their effectiveness depends on proper implementation and key management.
 
-    # Relationships
-    owner = relationship("User", back_populates="files",
-                        foreign_keys=[owner_id])
-    recipient = relationship("User", back_populates="received_files",
-                           foreign_keys=[recipient_id])
-\end{lstlisting}
+Man-in-the-middle attacks intercept and potentially modify communications between legitimate parties, requiring robust mutual authentication mechanisms. Eavesdropping attacks capture transmitted data, necessitating encryption to protect confidentiality. Data modification attacks alter transmitted content, requiring integrity protection mechanisms like message authentication codes or digital signatures.
 
-\subsubsection{Database Session Management}
-The application uses FastAPI dependency injection for database sessions:
-\begin{lstlisting}[language=Python]
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-\end{lstlisting}
+\subsubsection{Storage Security Considerations}
+Data at rest requires protection against unauthorized access, whether through direct system compromise or indirect attacks. Encryption theories, including symmetric and asymmetric cryptography, form the basis for secure storage mechanisms.
 
-This pattern ensures:
+The choice between symmetric and asymmetric encryption involves trade-offs between performance and key management complexity. Symmetric encryption provides efficient bulk data processing but requires secure key distribution. Asymmetric encryption enables secure key exchange but introduces computational overhead for large data volumes.
+
+\subsection{User Experience Theoretical Framework}
+The integration of security features with user experience represents a significant theoretical challenge. Security measures often introduce cognitive load and workflow disruptions that can undermine system adoption. The application explores theoretical approaches to security usability, including transparent security, progressive disclosure, mental model alignment, and error prevention.
+
+\subsubsection{Transparent Security}
+Implementing security measures that operate invisibly to users requires careful consideration of user mental models and interaction patterns. Security mechanisms should enhance rather than hinder user workflows, operating seamlessly within established interaction paradigms. For instance, automatic session timeouts protect against unauthorized access without requiring user intervention, while background encryption ensures data protection without disrupting file operations.
+
+\subsubsection{Progressive Disclosure}
+Revealing security information as needed prevents user overwhelm while ensuring critical security decisions receive appropriate attention. This approach balances comprehensive security information with cognitive load management. Advanced security settings remain hidden until users demonstrate the need for them, while basic security indicators provide constant reassurance without distraction.
+
+\subsubsection{Mental Model Alignment}
+Security concepts must align with user expectations and existing mental models of system behavior. Misalignment between security implementations and user understanding can lead to security mistakes or rejection of security features. Users familiar with chat applications expect intuitive sharing mechanisms, so security controls should integrate naturally with familiar interaction patterns rather than introducing alien concepts.
+
+\subsubsection{Error Prevention}
+Designing systems that prevent security mistakes requires understanding common user errors and implementing safeguards that guide users toward secure behaviors without punitive measures. Input validation prevents insecure configurations, while contextual help guides users through complex security decisions.
+
+\subsection{Performance and Scalability Theories}
+Modern file sharing systems must accommodate varying usage patterns while maintaining security guarantees. Theoretical models of system performance consider factors such as response time requirements for different operations, concurrent user capacity and resource utilization, storage efficiency and data compression theories, and network bandwidth optimization strategies.
+
+Response time requirements vary significantly across different operations, with authentication processes requiring sub-second responses while large file transfers may tolerate longer completion times. Concurrent user capacity depends on system architecture and resource allocation strategies. Storage efficiency involves compression algorithms and deduplication techniques. Network bandwidth optimization includes caching strategies and content delivery network integration.
+
+\section{Requirements Analysis and System Specification}
+\subsection{Functional Requirements Theory}
+The functional requirements of secure file sharing systems can be derived from use case analysis and workflow modeling. Core functions include user management, file operations, and access control mechanisms.
+
+\subsubsection{User Management Requirements}
+User management encompasses the theoretical processes of identity creation, authentication, and lifecycle management. This includes:
 \begin{itemize}
-  \item Automatic session cleanup
-  \item Thread safety in async contexts
-  \item Proper transaction handling
-  \item Connection pooling efficiency
+  \item User registration and identity verification processes that establish trusted user identities
+  \item Credential management and password policies that enforce security standards
+  \item Account lifecycle management and deactivation procedures for security maintenance
+  \item Profile management and preference settings for personalized user experiences
 \end{itemize}
 
-\subsection{Frontend Implementation}
-\subsubsection{Template Architecture}
-The application uses Jinja2 templates with a base template pattern:
+\subsubsection{File Operation Requirements}
+File operations represent the core functionality of sharing systems, requiring careful consideration of security implications:
 \begin{itemize}
-  \item \textbf{base.html}: Common layout with navigation and Bootstrap integration
-  \item \textbf{dashboard.html}: Main chat interface with file bubbles
-  \item \textbf{login.html/register.html}: Authentication forms
-  \item \textbf{admin\_dashboard.html}: Administrative interface
+  \item Secure upload mechanisms with integrity verification to ensure file authenticity
+  \item Download access control and audit logging for tracking file access patterns
+  \item File versioning and conflict resolution for collaborative document management
+  \item Metadata management and search capabilities for efficient file discovery
 \end{itemize}
 
-\subsubsection{CSS Design System}
-The styling implements a modern design system:
-\begin{lstlisting}[language=CSS]
-:root {
-  --brand: #0d6efd;
-  --brand-hover: #0b5ed7;
-  --muted: #6c757d;
-  --light-bg: #f8fafc;
-  --card-bg: #ffffff;
-  --shadow: rgba(0, 0, 0, 0.1);
-  --shadow-hover: rgba(0, 0, 0, 0.15);
-  --border-radius: 16px;
-  --transition: all 0.3s ease;
-}
-\end{lstlisting}
-
-\subsubsection{Chat Interface Implementation}
-The dashboard template creates a messaging-like experience:
+\subsubsection{Communication and Collaboration Features}
+The chat-like interface introduces additional functional requirements related to interpersonal communication:
 \begin{itemize}
-  \item File uploads displayed as chat bubbles
-  \item Chronological ordering by upload timestamp
-  \item Color-coded sent/received messages
-  \item Smooth animations and hover effects
-  \item Responsive design for mobile devices
+  \item Message threading and conversation management for organized discussions
+  \item File attachment and sharing workflows integrated with chat interfaces
+  \item Notification systems and status updates for real-time collaboration
+  \item User presence and availability indicators for effective communication
 \end{itemize}
 
-\subsection{Error Handling and Validation}
-\subsubsection{Pydantic Schema Validation}
-The application uses Pydantic for comprehensive input validation:
-\begin{lstlisting}[language=Python]
-class UserCreate(BaseModel):
-    email: EmailStr
+\subsection{Non-Functional Requirements Analysis}
+Non-functional requirements define the quality attributes that ensure system reliability and user satisfaction beyond basic functionality.
 
-class UserRegisterResponse(BaseModel):
-    username: str
-    email: EmailStr
-    key: str
-
-class FileInfo(BaseModel):
-    id: int
-    filename: str
-    owner: UserBase
-    uploaded_at: datetime
-\end{lstlisting}
-
-\subsubsection{HTTP Exception Handling}
-FastAPI's HTTPException provides structured error responses:
+\subsubsection{Security Requirements}
+Security requirements form the foundation of system trustworthiness:
 \begin{itemize}
-  \item 400: Bad Request (invalid input)
-  \item 401: Unauthorized (authentication required)
-  \item 403: Forbidden (insufficient permissions)
-  \item 404: Not Found (resource doesn't exist)
-  \item 500: Internal Server Error (server issues)
+  \item Confidentiality through encryption and access controls protecting sensitive data
+  \item Integrity through hashing and validation mechanisms ensuring data authenticity
+  \item Availability through redundancy and fault tolerance maintaining service continuity
+  \item Non-repudiation through audit trails and digital signatures preventing denial of actions
 \end{itemize}
 
-\subsection{Configuration Management}
-\subsubsection{Environment-Based Configuration}
-The application uses Pydantic Settings for configuration:
-\begin{lstlisting}[language=Python]
-class Settings(BaseSettings):
-    DATABASE_URL: str
-    SECRET_KEY: str
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    UPLOAD_DIR: str = "uploaded_files"
-
-    model_config = SettingsConfigDict(env_file=".env")
-
-settings = Settings()
-\end{lstlisting}
-
-This approach provides:
+\subsubsection{Performance Requirements}
+Performance requirements ensure responsive and efficient system operation:
 \begin{itemize}
-  \item Type validation for configuration values
-  \item Environment variable support
-  \item Default values for optional settings
-  \item Validation at application startup
+  \item Response time targets for different operations meeting user expectations
+  \item Throughput requirements for concurrent users supporting scalability needs
+  \item Resource utilization limits and optimization goals for efficient operation
+  \item Scalability requirements for future growth accommodating increased demand
 \end{itemize}
 
-\section{Security Considerations}
-This section lists security design choices, current implementation gaps, and recommended improvements.
-
-\subsection{What is done well}
+\subsubsection{Usability Requirements}
+Usability requirements ensure the system meets user needs effectively:
 \begin{itemize}
-  \item JWT-based session management reduces server-side session storage complexity.
-  \item Files are stored with unpredictable filenames, preventing simple enumeration.
-  \item Access control is enforced at the download endpoint (owner or recipient only).
-  \item Input validation is performed through Pydantic schemas for incoming request bodies.
+  \item Learnability for new users through intuitive interface design
+  \item Efficiency for experienced users enabling rapid task completion
+  \item Error prevention and recovery mechanisms minimizing user frustration
+  \item Accessibility compliance and inclusive design serving diverse user populations
 \end{itemize}
 
-\subsection{Recommendations and Gaps}
+\subsubsection{Reliability and Availability Requirements}
+Reliability requirements ensure consistent system operation:
 \begin{itemize}
-  \item Password hashing should use a slow adaptive algorithm (bcrypt/argon2) with unique salts. Replace SHA256 usage with `passlib`'s bcrypt via `pwd_context`. Example conversion:
-  \begin{lstlisting}
-from passlib.context import CryptContext
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-  \end{lstlisting}
-  \item Ensure the JWT `SECRET_KEY` is a high-entropy value stored securely (e.g., environment variable or secret manager). Rotate keys if compromised.
-  \item For file uploads, enforce file size limits and content-type checks to defend against abusive uploads and potential server resource consumption.
-  \item Use HTTPS in production to protect the cookie and Authorization header in transit; set cookie flags `secure=True` and `samesite` attributes appropriately.
-  \item Consider adding rate limiting for endpoints like login to mitigate brute-force attacks.
-  \item Sanitize template output and avoid rendering unescaped user-provided HTML; Jinja2 escapes variables by default, but confirm any `|safe` usage is necessary and safe.
-  \item Server-side validation for recipient username is in place; consider notifying users when they receive files only after verification.
+  \item Uptime requirements and service level agreements guaranteeing availability
+  \item Fault tolerance and recovery mechanisms ensuring system resilience
+  \item Data backup and disaster recovery procedures protecting against data loss
+  \item Monitoring and alerting capabilities enabling proactive maintenance
 \end{itemize}
 
-\section{Results and Analysis}
-\subsection{System Performance Analysis}
-The Secure File Chat Application demonstrates robust performance characteristics suitable for small to medium-scale deployments. Key performance metrics include:
+\section{System Architecture and Design Theory}
+\subsection{Layered Architecture Principles}
+The system architecture follows established principles of layered design, promoting separation of concerns and modular development. This approach facilitates:
 \begin{itemize}
-  \item \textbf{Response Times}: FastAPI's asynchronous capabilities ensure sub-100ms response times for most endpoints
-  \item \textbf{File Upload Efficiency}: Direct-to-disk streaming prevents memory exhaustion during large file uploads
-  \item \textbf{Database Query Optimization}: SQLAlchemy ORM provides efficient query execution with proper indexing
-  \item \textbf{Security Overhead}: JWT token validation adds minimal latency while maintaining security
+  \item Independent component development and testing enabling parallel work
+  \item Technology flexibility and future migration supporting long-term evolution
+  \item Security boundary definition and enforcement creating clear protection zones
+  \item Performance optimization at different layers allowing targeted improvements
 \end{itemize}
 
-\subsection{User Experience Evaluation}
-The chat-like interface receives positive feedback for its intuitive design:
+\subsubsection{Presentation Layer Theory}
+The presentation layer handles user interface rendering and client-side interactions. Theoretical considerations include:
 \begin{itemize}
-  \item \textbf{Usability}: File sharing mimics familiar messaging applications, reducing learning curve
-  \item \textbf{Visual Design}: Glassmorphism effects and gradient backgrounds create a modern, professional appearance
-  \item \textbf{Responsiveness}: Bootstrap 5 ensures consistent experience across desktop and mobile devices
-  \item \textbf{Accessibility}: Color contrast and semantic HTML improve usability for all users
+  \item Responsive design principles for multi-device support ensuring accessibility
+  \item Progressive enhancement and graceful degradation maintaining functionality
+  \item Accessibility standards and inclusive design serving all users
+  \item User experience optimization and interaction design creating intuitive interfaces
 \end{itemize}
 
-\subsection{Security Assessment}
-Security analysis reveals strong foundational security with room for enhancement:
+\subsubsection{Application Layer Theory}
+The application layer manages business logic and request processing. Key theoretical aspects include:
 \begin{itemize}
-  \item \textbf{Strengths}: Unique filename generation, proper access controls, JWT-based authentication
-  \item \textbf{Areas for Improvement}: Password hashing algorithm upgrade, file size limits, rate limiting
-  \item \textbf{Compliance}: Framework supports GDPR and data protection requirements
-  \item \textbf{Vulnerability Mitigation}: Input validation and SQL injection prevention implemented
+  \item Business rule enforcement and validation ensuring data consistency
+  \item Transaction management and data consistency maintaining system integrity
+  \item Error handling and exception management providing robust operation
+  \item Service orchestration and workflow management coordinating complex processes
 \end{itemize}
 
-\subsection{Technical Achievement Analysis}
-The project successfully demonstrates several advanced technical concepts:
+\subsubsection{Domain Layer Theory}
+The domain layer contains core business rules and data models. Theoretical foundations include:
 \begin{itemize}
-  \item \textbf{Modern Python Stack}: Effective use of FastAPI, SQLAlchemy, and async programming
-  \item \textbf{Security Best Practices}: Implementation of industry-standard security patterns
-  \item \textbf{Database Design}: Proper normalization and relationship management
-  \item \textbf{API Design}: RESTful endpoints with comprehensive documentation
+  \item Domain-driven design principles capturing business complexity
+  \item Business logic encapsulation and abstraction hiding implementation details
+  \item Data validation and integrity constraints enforcing business rules
+  \item Domain service identification and implementation supporting business operations
 \end{itemize}
 
-\subsection{Limitations and Constraints}
-Several limitations were identified during development and testing:
+\subsubsection{Infrastructure Layer Theory}
+The infrastructure layer manages external dependencies and system services. Theoretical considerations include:
 \begin{itemize}
-  \item \textbf{Scalability}: SQLite database limits concurrent user capacity
-  \item \textbf{File Storage}: Local file system storage lacks redundancy and backup capabilities
-  \item \textbf{Real-time Features}: Lack of WebSocket support prevents live notifications
-  \item \textbf{Internationalization}: Single language support limits global adoption
+  \item Data persistence and storage abstractions enabling flexible storage options
+  \item External service integration patterns supporting third-party services
+  \item Caching strategies and performance optimization improving response times
+  \item Monitoring and logging infrastructure enabling system observability
 \end{itemize}
 
-\subsection{Comparative Analysis}
-Compared to similar solutions, the application offers:
+\subsection{Component Interaction Theory}
+Component interaction in layered architectures requires careful consideration of coupling and cohesion principles. The system implements several interaction patterns:
 \begin{itemize}
-  \item \textbf{Advantages}: Superior security, modern UI, open-source codebase
-  \item \textbf{Competitive Position}: Better user experience than basic file sharing services
-  \item \textbf{Market Fit}: Suitable for secure team collaboration and educational use cases
+  \item Dependency injection for loose coupling enabling flexible component replacement
+  \item Interface contracts for component communication ensuring reliable interactions
+  \item Event-driven architectures for asynchronous operations supporting scalability
+  \item Service-oriented design principles for modularity facilitating maintenance
 \end{itemize}
 
-\section{Testing Strategy}
-\subsection{Manual Tests}
-The repo includes a manual checklist (README). Key manual tests:
+\subsection{Security Architecture Integration}
+Security principles are integrated throughout the architectural layers:
 \begin{itemize}
-  \item Registering with a valid email returns generated credentials.
-  \item Logging in with correct credentials sets the cookie and reaches dashboard.
-  \item Upload and download flows work only for owner/recipient.
-  \item Admin endpoints require an admin user.
+  \item Authentication enforcement at layer boundaries controlling access points
+  \item Authorization checks within business logic implementing access controls
+  \item Data encryption at persistence layers protecting stored information
+  \item Audit logging across all components maintaining security accountability
 \end{itemize}
 
-\subsection{Automated Tests (recommended)}
-Create a small pytest suite which:
-\begin{enumerate}
-  \item Boots a test FastAPI client (TestClient) and creates an in-memory SQLite database.
-  \item Tests `create_user` function and login/token issuance.
-  \item Tests file upload endpoints using temporary files and asserts DB records exist.
-  \item Tests authorization boundaries: user A cannot download user B's file.
-\end{enumerate}
-
-\subsection{Sample pytest skeleton}
-\begin{lstlisting}
-# tests/test_auth.py
-from fastapi.testclient import TestClient
-from main import app
-
-def test_register_and_login():
-    client = TestClient(app)
-    r = client.post('/create-user/', json={'email': 'test@example.com'})
-    assert r.status_code == 200
-    data = r.json()
-    assert 'username' in data and 'key' in data
-
-    token_resp = client.post('/token', data={'username': data['username'], 'password': data['key']})
-    assert token_resp.status_code == 200
-    t = token_resp.json()
-    assert 'access_token' in t
-\end{lstlisting}
-
-\section{Deployment and Operations}
-\subsection{Environment and Configuration}
-Configuration uses a `Settings` class in `config.py` which loads from environment variables via Pydantic Settings. The required variables are:
+\section{Database Design and Data Management Theory}
+\subsection{Relational Database Theory}
+The database design follows relational database principles, implementing normalization to reduce redundancy and ensure data integrity. Key theoretical concepts include:
 \begin{itemize}
-  \item DATABASE_URL
-  \item SECRET_KEY
-  \item ALGORITHM
-  \item ACCESS_TOKEN_EXPIRE_MINUTES
-  \item UPLOAD_DIR
+  \item Normal forms and normalization theory eliminating data anomalies
+  \item Entity-relationship modeling principles representing real-world relationships
+  \item Referential integrity and constraint theory maintaining data consistency
+  \item Query optimization and indexing strategies improving performance
 \end{itemize}
 
-\subsection{Docker Deployment}
-A sample Dockerfile is in the README. For production deployments, pair the app with a managed RDS/Postgres (set DATABASE_URL accordingly) and use a robust storage backend (S3) for file blobs instead of local disk.
-
-\subsection{Scaling Considerations}
+\subsubsection{Entity-Relationship Modeling}
+Entity-relationship (ER) modeling provides a theoretical framework for representing real-world concepts in database structures. The model captures:
 \begin{itemize}
-  \item Serve static assets via CDN.
-  \item Use cloud object storage for files and a dedicated DB server to handle concurrency.
-  \item Use connection pooling and tune max connections for the chosen DB.
-  \item Consider moving long-running uploads behind async workers if heavy traffic expected.
+  \item Entity identification and attribute definition establishing data structures
+  \item Relationship types and cardinalities defining connection patterns
+  \item Key constraints and uniqueness requirements ensuring data integrity
+  \item Inheritance and specialization hierarchies supporting complex relationships
 \end{itemize}
 
-\section{User Interface and UX}
-\subsection{Design Choices}
-The UI uses a centered "chat" style where file uploads are displayed as bubbles. The CSS implements glassmorphism with backdrop blur and gradients to create a modern aesthetic. The dashboard displays both sent and received files in a chronological timeline with clear differentiation by color.
-
-\subsection{Accessibility and Responsiveness}
-Templates use Bootstrap 5 utilities and responsive containers to ensure the layout adapts across devices. Ensure color contrast and ARIA attributes for key interactive elements for improved accessibility.
-
-\section{Project Walkthrough: Key Code Excerpts}
-Below are representative excerpts from the repository illustrating important behaviors. These are included to help readers locate the implementation in the codebase.
-
-\subsection{Upload Handler (main.py)}
-\begin{lstlisting}
-@app.post("/upload/")
-def upload_file(...):
-    file_extension = os.path.splitext(file.filename)[1]
-    saved_filename = f"{uuid.uuid4()}{file_extension}"
-    file_path = os.path.join(settings.UPLOAD_DIR, saved_filename)
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    crud.create_file_record(...)
-    return RedirectResponse(url="/dashboard", status_code=303)
-\end{lstlisting}
-
-\subsection{Download Authorization (main.py)}
-\begin{lstlisting}
-@app.get("/download/{saved_filename}")
-def download_file(saved_filename: str, current_user: models.User = Depends(get_current_active_user)):
-    db_file = crud.get_file_by_saved_name(db, saved_filename)
-    if not db_file:
-        raise HTTPException(status_code=404)
-    if db_file.owner_id != current_user.id and db_file.recipient_id != current_user.id:
-        raise HTTPException(status_code=403)
-    return FileResponse(file_path, filename=db_file.filename)
-\end{lstlisting}
-
-\subsection{User Creation Logic (crud.py)}
-\begin{lstlisting}
-def create_user(db: Session, user: schemas.UserCreate):
-    while True:
-        username = security.generate_unique_code(6)
-        if not get_user_by_username(db, username=username):
-            break
-    key = security.generate_unique_code(10)
-    hashed_password = security.get_password_hash(key)
-    db_user = models.User(username=username, email=user.email, hashed_password=hashed_password)
-    db.add(db_user); db.commit(); db.refresh(db_user)
-    return db_user, key
-\end{lstlisting}
-
-\section{Appendix: Files and Locations}
-A quick map of important files in the repository:
+\subsubsection{Normalization Theory}
+Database normalization theory ensures data integrity and reduces redundancy:
 \begin{itemize}
-  \item `main.py` -- entrypoint, routes, template rendering, file upload/download logic.
-  \item `models.py` -- SQLAlchemy models: User and File.
-  \item `crud.py` -- database helper functions creating and querying users and files.
-  \item `security.py` -- hashing and token utilities (code generation and JWT creation).
-  \item `database.py` -- SQLAlchemy engine and session setup.
-  \item `config.py` -- Settings loader using pydantic-settings.
-  \item `templates/` -- Jinja2 templates (home, login, register, dashboard, received, admin_dashboard).
-  \item `static/css/style.css` -- styling for the chat interface and glassmorphism.
-  \item `requirements.txt` -- Python dependencies.
+  \item First normal form (1NF): Atomic values and no repeating groups eliminating redundancy
+  \item Second normal form (2NF): No partial dependencies on composite keys ensuring full dependence
+  \item Third normal form (3NF): No transitive dependencies eliminating update anomalies
+  \item Boyce-Codd normal form (BCNF): Every determinant is a candidate key achieving higher normalization
 \end{itemize}
 
-\section{Future Work and Enhancements}
-The README already lists suggestions; we recast them here with priorities and short implementation notes:
-\begin{enumerate}
-  \item Email notifications (Medium): integrate an SMTP provider and send emails on registration and when a file is shared.
-  \item File expiration and cleanup (High): support TTLs for shared files and periodic cleanup jobs (cron or Celery beat).
-  \item Adaptive password hashing (Critical): migrate to passlib + bcrypt/argon2 and require re-hash on login if legacy SHA256 detected.
-  \item Two-factor authentication (Optional): OTP via email or authenticator apps.
-  \item Cloud storage integration (Medium): abstract file store and support S3-compatible backends.
-  \item Rate limiting and monitoring (High): implement per-user rate limits for login and upload endpoints and integration with Prometheus/Grafana for metrics.
-\end{enumerate}
-
-\section{How to Build and Run}
-\subsection{Prerequisites}
+\subsection{Data Integrity and Consistency}
+Data integrity theories ensure database reliability:
 \begin{itemize}
-  \item Python 3.8+ (3.11 recommended)
-  \item Virtual environment (venv)
+  \item Entity integrity through primary key constraints preventing duplicate entries
+  \item Referential integrity through foreign key relationships maintaining relationship validity
+  \item Domain integrity through data type and check constraints enforcing valid values
+  \item User-defined integrity through business rules implementing complex validations
 \end{itemize}
 
-\subsection{Local development steps}
-\begin{enumerate}
-  \item Create and activate venv: `python -m venv myenv` and `myenv\\Scripts\\activate` (Windows).
-  \item Install requirements: `pip install -r requirements.txt`.
-  \item Create `.env` or set environment variables for `DATABASE_URL`, `SECRET_KEY`, `ALGORITHM`, `ACCESS_TOKEN_EXPIRE_MINUTES`, `UPLOAD_DIR`.
-  \item Initialize DB: `python -c "from database import Base, engine; Base.metadata.create_all(bind=engine)"`.
-  \item Run app: `uvicorn main:app --reload --port 3000` and open `http://localhost:3000`.
-\end{enumerate}
-
-\section{Notes on Compilation and Figures}
-This LaTeX file includes a small TikZ diagram. To compile:
+\subsection{Query Optimization Theory}
+Efficient data retrieval requires understanding query optimization principles:
 \begin{itemize}
-  \item Ensure a working TeX distribution is installed (TeX Live, MikTeX).
-  \item Run `pdflatex project_report.tex` (may need two runs for TOC).
+  \item Index selection and maintenance strategies improving search performance
+  \item Query execution plan analysis identifying optimal access paths
+  \item Join optimization techniques reducing computational complexity
+  \item Caching and materialized view theories enhancing query performance
 \end{itemize}
-If you prefer to produce diagrams from the repository's mermaid sources, use a mermaid CLI or online renderer to generate PNG/SVG, then include them with \verb|\includegraphics|.
+
+\section{Authentication and Authorization Theories}
+\subsection{Authentication Theory}
+Authentication theory encompasses the principles of identity verification and credential validation. The system implements multiple authentication approaches:
+
+\subsubsection{Password-Based Authentication}
+Password authentication relies on shared secret knowledge:
+\begin{itemize}
+  \item Password strength requirements and complexity rules preventing weak passwords
+  \item Hashing algorithms and salt usage for secure storage protecting against rainbow tables
+  \item Password policy enforcement and aging requirements maintaining security hygiene
+  \item Multi-factor authentication integration possibilities enhancing security layers
+\end{itemize}
+
+\subsubsection{Token-Based Authentication}
+Token-based systems provide stateless authentication:
+\begin{itemize}
+  \item JSON Web Token (JWT) structure and claims containing user identity information
+  \item Token generation and signing algorithms ensuring token authenticity
+  \item Expiration and refresh token management controlling token lifecycle
+  \item Secure token storage and transmission preventing token compromise
+\end{itemize}
+
+\subsubsection{Multi-Factor Authentication Theory}
+Multi-factor authentication combines multiple verification methods:
+\begin{itemize}
+  \item Something you know (passwords, PINs) providing knowledge-based verification
+  \item Something you have (tokens, certificates) offering possession-based verification
+  \item Something you are (biometric factors) delivering inherence-based verification
+  \item Risk-based authentication considerations adapting security based on context
+\end{itemize}
+
+\subsection{Authorization Theory}
+Authorization theory defines access control and permission management:
+
+\subsubsection{Discretionary Access Control (DAC)}
+DAC models allow resource owners to control access:
+\begin{itemize}
+  \item Access control lists (ACLs) and permission matrices defining access rights
+  \item Ownership and delegation principles enabling resource sharing
+  \item Granular permission assignment supporting fine-tuned access control
+  \item Inheritance and propagation rules managing permission distribution
+\end{itemize}
+
+\subsubsection{Mandatory Access Control (MAC)}
+MAC models enforce system-wide security policies:
+\begin{itemize}
+  \item Security labels and classification schemes categorizing information sensitivity
+  \item Clearance and need-to-know principles restricting information access
+  \item System-enforced access rules preventing unauthorized access
+  \item Policy administration and enforcement maintaining security compliance
+\end{itemize}
+
+\subsubsection{Role-Based Access Control (RBAC)}
+RBAC models organize permissions around user roles:
+\begin{itemize}
+  \item Role definition and hierarchy management structuring organizational roles
+  \item Permission assignment to roles simplifying access control administration
+  \item User-role assignment and activation controlling user access levels
+  \item Role-based constraint enforcement preventing privilege conflicts
+\end{itemize}
+
+\subsection{Session Management Theory}
+Session management ensures secure user interactions:
+\begin{itemize}
+  \item Session creation and identification establishing user interaction contexts
+  \item Session state management and persistence maintaining user experience continuity
+  \item Timeout and expiration policies preventing unauthorized prolonged access
+  \item Concurrent session handling managing multiple user sessions securely
+\end{itemize}
+
+\section{Security Architecture and Cryptographic Foundations}
+\subsection{Cryptographic Theory}
+The security architecture is built on established cryptographic principles:
+
+\subsubsection{Symmetric Cryptography}
+Symmetric algorithms use shared secret keys:
+\begin{itemize}
+  \item Block cipher modes of operation ensuring secure encryption patterns
+  \item Key management and distribution protecting cryptographic keys
+  \item Initialization vectors and nonce usage preventing replay attacks
+  \item Performance and security trade-offs balancing efficiency and protection
+\end{itemize}
+
+\subsubsection{Asymmetric Cryptography}
+Asymmetric algorithms use key pairs:
+\begin{itemize}
+  \item Public key infrastructure (PKI) concepts establishing trust frameworks
+  \item Digital signature theory and applications ensuring message authenticity
+  \item Key exchange protocols and algorithms enabling secure key distribution
+  \item Certificate authority and trust models validating key authenticity
+\end{itemize}
+
+\subsubsection{Hash Functions and Integrity}
+Cryptographic hash functions ensure data integrity:
+\begin{itemize}
+  \item Collision resistance properties preventing hash collisions
+  \item Preimage and second preimage resistance protecting against reverse engineering
+  \item Hash-based message authentication codes (HMAC) providing integrity and authenticity
+  \item Password hashing and key derivation functions securing credential storage
+\end{itemize}
+
+\subsection{Threat Modeling Methodology}
+Systematic threat modeling identifies security risks:
+\begin{itemize}
+  \item Asset identification and valuation determining protection priorities
+  \item Threat actor characterization understanding attacker motivations and capabilities
+  \item Attack vector analysis and prioritization focusing defense efforts
+  \item Mitigation strategy development creating comprehensive security responses
+\end{itemize}
+
+\subsection{Defense-in-Depth Strategy}
+Multiple security layers provide comprehensive protection:
+\begin{itemize}
+  \item Network security and perimeter defenses protecting network boundaries
+  \item Application-level security controls securing application logic
+  \item Data protection and encryption safeguarding stored information
+  \item Monitoring and incident response enabling rapid threat response
+\end{itemize}
+
+\subsection{Secure Communication Protocols}
+Secure data transmission requires protocol analysis:
+\begin{itemize}
+  \item Transport Layer Security (TLS) handshake process establishing secure connections
+  \item Certificate validation and trust chains verifying communication authenticity
+  \item Perfect forward secrecy considerations protecting past communications
+  \item Protocol downgrade attack prevention maintaining security levels
+\end{itemize}
+
+\section{User Interface and Experience Design Theory}
+\subsection{Human-Computer Interaction Principles}
+User interface design follows established HCI principles:
+\begin{itemize}
+  \item User-centered design methodology focusing on user needs and preferences
+  \item Cognitive psychology and mental models understanding user thought processes
+  \item Affordance and signifiers in interface design communicating functionality
+  \item Feedback and response principles providing clear system communication
+\end{itemize}
+
+\subsection{Usability Engineering Theory}
+Usability engineering ensures effective system use:
+\begin{itemize}
+  \item User analysis and task modeling understanding user workflows and goals
+  \item Usability goal setting and measurement establishing success criteria
+  \item Iterative design and evaluation cycles refining interface designs
+  \item Usability testing methodologies validating design effectiveness
+\end{itemize}
+
+\subsection{Visual Design Theory}
+Visual design principles guide interface aesthetics:
+\begin{itemize}
+  \item Visual hierarchy and information architecture organizing content effectively
+  \item Color theory and accessibility considerations ensuring inclusive design
+  \item Typography and readability principles enhancing content comprehension
+  \item Layout and composition theories creating balanced visual arrangements
+\end{itemize}
+
+\subsection{Responsive Design Theory}
+Responsive design ensures cross-device compatibility:
+\begin{itemize}
+  \item Fluid grid systems and flexible layouts adapting to different screens
+  \item Media query implementation strategies targeting specific device characteristics
+  \item Progressive enhancement approaches building functionality incrementally
+  \item Mobile-first design principles prioritizing mobile user experiences
+\end{itemize}
+
+\subsection{Security and Usability Balance}
+Integrating security with usability requires careful consideration:
+\begin{itemize}
+  \item Security transparency and user awareness communicating security states
+  \item Friction reduction in security workflows minimizing user burden
+  \item Error prevention and recovery mechanisms guiding secure behaviors
+  \item Trust building through consistent behavior establishing user confidence
+\end{itemize}
+
+\section{Implementation Methodology and Best Practices}
+\subsection{Agile Development Theory}
+Agile methodologies guide iterative development:
+\begin{itemize}
+  \item Sprint planning and backlog management organizing development work
+  \item Continuous integration and delivery ensuring rapid deployment capabilities
+  \item Test-driven development principles guiding code quality and design
+  \item Retrospective and improvement processes enabling continuous enhancement
+\end{itemize}
+
+\subsection{Security Development Lifecycle}
+Security integration throughout development:
+\begin{itemize}
+  \item Threat modeling in design phases identifying security requirements early
+  \item Security requirements definition establishing security objectives
+  \item Secure coding practices and code review preventing security vulnerabilities
+  \item Security testing and validation verifying security implementation
+\end{itemize}
+
+\subsection{Testing Theory and Methodologies}
+Comprehensive testing ensures system quality:
+\begin{itemize}
+  \item Unit testing and component verification validating individual components
+  \item Integration testing and system validation ensuring component interoperability
+  \item Security testing and vulnerability assessment identifying security weaknesses
+  \item Performance testing and load analysis measuring system capabilities
+\end{itemize}
+
+\subsection{Performance Optimization Theory}
+System performance optimization strategies:
+\begin{itemize}
+  \item Algorithm complexity analysis evaluating computational efficiency
+  \item Database query optimization improving data retrieval performance
+  \item Caching strategies and memory management reducing response times
+  \item Network latency reduction techniques minimizing communication delays
+\end{itemize}
+
+\section{Deployment and Operations Theory}
+\subsection{Deployment Strategy Theory}
+Deployment methodologies ensure reliable system rollout:
+\begin{itemize}
+  \item Blue-green deployment patterns enabling zero-downtime updates
+  \item Canary release strategies testing changes with limited user groups
+  \item Rollback procedures and risk mitigation ensuring deployment safety
+  \item Configuration management principles maintaining consistent environments
+\end{itemize}
+
+\subsection{DevOps and Infrastructure Theory}
+Infrastructure management and automation:
+\begin{itemize}
+  \item Infrastructure as Code (IaC) principles enabling automated provisioning
+  \item Containerization and orchestration theories supporting scalable deployments
+  \item Monitoring and observability frameworks providing system insights
+  \item Incident response and disaster recovery ensuring business continuity
+\end{itemize}
+
+\subsection{Scalability Theory}
+System scaling principles and architectures:
+\begin{itemize}
+  \item Horizontal and vertical scaling approaches accommodating growth
+  \item Load balancing and distribution strategies optimizing resource utilization
+  \item Database scaling and sharding theories managing data growth
+  \item Caching and performance optimization enhancing user experience
+\end{itemize}
+
+\subsection{Maintenance and Evolution Theory}
+System maintenance and evolution strategies:
+\begin{itemize}
+  \item Software maintenance lifecycle models guiding system updates
+  \item Version control and release management ensuring deployment consistency
+  \item Technical debt management addressing accumulated system issues
+  \item Continuous improvement processes driving ongoing enhancement
+\end{itemize}
+
+\section{Results Analysis and Evaluation}
+\subsection{Security Evaluation Theory}
+Security assessment methodologies:
+\begin{itemize}
+  \item Vulnerability assessment frameworks identifying potential weaknesses
+  \item Penetration testing methodologies simulating real-world attacks
+  \item Security audit procedures ensuring compliance and best practices
+  \item Compliance evaluation standards meeting regulatory requirements
+\end{itemize}
+
+\subsection{Performance Analysis Theory}
+Performance evaluation approaches:
+\begin{itemize}
+  \item Benchmarking and performance metrics measuring system capabilities
+  \item Load testing and stress analysis determining system limits
+  \item Profiling and bottleneck identification locating performance issues
+  \item Optimization measurement and validation quantifying improvements
+\end{itemize}
+
+\subsection{Usability Evaluation Theory}
+User experience assessment methods:
+\begin{itemize}
+  \item Usability testing protocols evaluating interface effectiveness
+  \item User feedback collection and analysis incorporating user perspectives
+  \item Accessibility evaluation frameworks ensuring inclusive design
+  \item User satisfaction measurement techniques quantifying user experience
+\end{itemize}
+
+\subsection{System Integration Analysis}
+Integration testing and validation:
+\begin{itemize}
+  \item Component integration verification ensuring system cohesion
+  \item End-to-end workflow testing validating complete user journeys
+  \item Data flow and consistency validation maintaining data integrity
+  \item System boundary testing verifying external interface compatibility
+\end{itemize}
+
+\section{Future Research Directions}
+\subsection{Advanced Security Research}
+Emerging security research areas:
+\begin{itemize}
+  \item Zero-trust architecture models implementing comprehensive verification
+  \item Quantum-resistant cryptographic algorithms preparing for quantum threats
+  \item AI-driven threat detection systems enhancing security monitoring
+  \item Blockchain-based security frameworks providing decentralized security
+\end{itemize}
+
+\subsection{User Experience Innovation}
+Future user interface developments:
+\begin{itemize}
+  \item Voice and gesture-based interactions expanding input modalities
+  \item Augmented reality interfaces creating immersive experiences
+  \item Adaptive and personalized user experiences tailoring to individual needs
+  \item Inclusive design for diverse user populations serving global audiences
+\end{itemize}
+
+\subsection{System Architecture Evolution}
+Architectural research directions:
+\begin{itemize}
+  \item Microservices and serverless architectures enabling flexible deployments
+  \item Edge computing and distributed systems reducing latency
+  \item AI/ML integration in system design enhancing intelligence
+  \item Sustainable and energy-efficient computing minimizing environmental impact
+\end{itemize}
+
+\subsection{Regulatory and Compliance Research}
+Evolving regulatory landscapes:
+\begin{itemize}
+  \item Privacy regulation compliance (GDPR, CCPA) addressing data protection
+  \item Data sovereignty and localization requirements respecting jurisdictional boundaries
+  \item Industry-specific security standards meeting sector-specific needs
+  \item International cybersecurity frameworks establishing global standards
+\end{itemize}
 
 \section{Conclusion}
-This report described the design and implementation of the Secure File Chat Application. The project demonstrates a pragmatic combination of server-side rendering and modern security patterns for small-scale file sharing. Key recommendations center on improving password hashing, strengthening upload validation, and migrating file storage to robust cloud services for production readiness.
+\subsection{Summary of Theoretical Contributions}
+This comprehensive analysis has explored the theoretical foundations of secure file sharing systems through the lens of the Secure File Chat Application. The report has examined fundamental concepts in computer security, database theory, user experience design, and software architecture, demonstrating how these theoretical frameworks inform practical system design decisions.
 
-\section*{Acknowledgements}
-Built as a mini project to demonstrate secure file sharing patterns using FastAPI, SQLAlchemy, and modern web UI design.
+\subsection{Key Theoretical Insights}
+The analysis reveals several important theoretical insights:
+\begin{enumerate}
+  \item Security and usability can be effectively balanced through thoughtful system design that integrates protection measures seamlessly into user workflows
+  \item Layered architectures provide robust foundations for secure system development by enabling clear separation of concerns and modular security implementation
+  \item User-centered design principles enhance security system adoption and effectiveness by aligning security mechanisms with user mental models
+  \item Comprehensive threat modeling is essential for identifying and mitigating security risks before they can be exploited
+  \item Continuous integration of security principles throughout the development lifecycle improves overall system security posture
+\end{enumerate}
+
+\subsection{Practical Implications}
+The theoretical frameworks presented in this report have direct practical implications for secure system development:
+\begin{itemize}
+  \item Authentication and authorization theories guide the implementation of robust access control mechanisms that balance security with usability
+  \item Database design principles ensure data integrity and efficient information management through proper normalization and constraint enforcement
+  \item User interface theories inform the creation of intuitive yet secure interaction patterns that maintain user trust and engagement
+  \item Security architecture principles provide frameworks for comprehensive threat mitigation using defense-in-depth strategies
+\end{itemize}
+
+\subsection{Limitations and Future Work}
+While this analysis provides a comprehensive theoretical foundation, several areas warrant further investigation:
+\begin{itemize}
+  \item Empirical validation of theoretical models through user studies and real-world deployment analysis
+  \item Comparative analysis of different architectural approaches and their security implications
+  \item Long-term security effectiveness evaluation measuring sustained security performance
+  \item Cross-cultural usability considerations examining security perceptions across different cultural contexts
+\end{itemize}
+
+\subsection{Final Reflections}
+The Secure File Chat Application demonstrates how theoretical computer science principles can be effectively applied to create practical, secure, and usable systems. By integrating security, usability, and architectural theories, the project provides a model for developing collaborative systems that protect user data while facilitating natural human interactions. This work contributes to the broader field of secure system design by illustrating the importance of theoretical foundations in guiding practical implementation decisions.
+
+The theoretical framework established in this report serves as a foundation for future research and development in secure collaborative systems, emphasizing the critical role of interdisciplinary approaches in addressing complex security and usability challenges.
 
 \section*{References}
-\begin{itemize}
-  \item FastAPI documentation: \url{https://fastapi.tiangolo.com}
-  \item SQLAlchemy documentation: \url{https://www.sqlalchemy.org}
-  \item PyJWT / python-jose: \url{https://python-jose.readthedocs.io}
-  \item Passlib: \url{https://passlib.readthedocs.io}
-\end{itemize}
+\begin{enumerate}
+  \item Anderson, R. (2008). \textit{Security Engineering: A Guide to Building Dependable Distributed Systems}. Wiley.
+  \item Saltzer, J. H., \& Schroeder, M. D. (1975). The protection of information in computer systems. \textit{Proceedings of the IEEE}, 63(9), 1278-1308.
+  \item Norman, D. A. (2013). \textit{The Design of Everyday Things}. Basic Books.
+  \item Schneier, B. (2015). \textit{Applied Cryptography: Protocols, Algorithms, and Source Code in C}. Wiley.
+  \item NIST Special Publication 800-53: Security and Privacy Controls for Information Systems and Organizations.
+  \item ISO/IEC 27001: Information Security Management Systems.
+  \item OWASP Top Ten Web Application Security Risks.
+  \item Shneiderman, B., Plaisant, C., Cohen, M., Jacobs, S., Elmqvist, N., \& Diakopoulos, N. (2016). \textit{Designing the User Interface: Strategies for Effective Human-Computer Interaction}. Pearson.
+\end{enumerate}
 
 \end{document}
